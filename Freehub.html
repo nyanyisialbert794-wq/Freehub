@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FreelanceHub Pro+</title>
+        <style>
+            *{
+                margin:0;
+                padding:0;
+                box-sizing:border-box;
+            }
+            body{
+                font-family:Arial;
+                background:#0f172a;
+                color:white;
+                transition:all .3s ease;
+            }
+            .light-mode{
+                background:#f1f5f9;
+                color:#020617}
+            .light-mode nav{background:#e2e8f0;}
+            .light-mode .card{
+                    background:#e2e8f0;
+                    color:#020617;
+            }
+                .light-mode .modal-content{
+                    background:#e2e8f0;
+                    color:#020617;
+                }
+                nav{
+                    display:flex;
+                    justify-content:space-between;
+                    padding:20px;
+                    background:#020617;
+                }
+                nav h2{color:#38bdf8;}
+                .controls{
+                    padding:20px;
+                    text-align:center;
+                }
+                .controls input,.controls select{
+                    padding:10px;
+                    margin:5px;
+                    border-radius:6px;
+                    border:none;
+                }
+                .services{
+                    display:grid;
+                    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+                    gap:20px;
+                    padding:20px;
+                }
+                .card{
+                    background:#1e293b;
+                    padding:20px;
+                    border-radius:10px;
+                    transition:.3s;
+                    animation:fadeIn .5s ease;
+                }
+                .card:hover{transform:scale(1.05);}
+                .card button{
+                    margin-top:10px;
+                    padding:8px;
+                    border:none;
+                    border-radius:6px;
+                    background:#38bdf8;
+                    cursor:pointer;
+                }
+                .favorite{
+                    background:#ef4444;
+                    color:white;
+                }
+                .badge{
+                    background:#22c55e;
+                    padding:4px 8px;
+                    border-radius:6px;
+                    font-size:12px;
+                    margin-bottom:5px;
+                    display:inline-block;
+                }
+                .stars{margin:5px 0;}
+                .star{
+                    cursor:pointer;
+                    font-size:18px;
+                    color:#64748b;
+                }
+                .star.active{color:#facc15;}
+                
+                /* Modal */
+                .modal{
+                    position:fixed;
+                    top:0;left:0;
+                    width:100%;
+                    height:100%;
+                    background:rgba(0,0,0,.7);
+                    display:none;
+                    justify-content:center;
+                    align-items:center;
+                }
+                .modal-content{
+                    background:#1e293b;
+                    padding:20px;
+                    border-radius:10px;
+                    text-align:center;
+                }
+                @keyframes fadeIn{
+                    from{
+                        opacity:0;
+                        transform:translateY(20px);
+                    }
+                    to{
+                        opacity:1;
+                        transform:translateY(0);
+                    }
+                }
+                footer{
+                    text-align:center;
+                    padding:20px;
+                    background:#020617;
+                }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <h2>FreelanceHub Pro+</h2>
+            <button id="themeToggle" style="margin-left:20px;padding:8px 12px;border-radius:6px;border:none;cursor:pointer">
+            </button>
+            </nav>
+            <section class="controls">
+                <input type="text" id="search" placeholder="Search services..." onkeyup="filterServices()">
+                <select id="category" onchange="filterServices()">
+                    <option value="all">All</option>
+                    <option value="web">Web</option>
+                    <option value="design">Design</option>
+                    <option value="data">Data</option>
+                </select>
+            </section><section id="services" class="services"></section>
+            
+            <!-- Modal -->
+            <div class="modal" id="modal">
+                <div class="modal-content">
+                    <p id="modalText"></p>
+                    <button onclick="closeModal()">Close</button>
+                </div>
+            </div>
+            <footer>
+                <p>&copy;2026 AlbertNyanyisi</p>
+            </footer>
+        <script>
+            const services=[
+                {
+                    name:"Build Responsive Website",
+                    price:100,
+                    cat:"web",desc:"Modern responsive website for businesses",
+                    top:true
+                },
+                {
+                    name:"Design Logo",
+                    price:50,
+                    cat:"design",
+                    desc:"Creative and professional logo design"
+                },
+                {
+                    name:"Excel Data Analysis",
+                    price:70,
+                    cat:"data",
+                    desc:"Clean and analyze data using Excel"
+                },
+                {
+                    name:"JavaScript Bug Fix",
+                    price:40,
+                    cat:"web",
+                    desc:"Fix errors and optimize your code"
+                }
+            ];
+            let favorites=JSON.parse(localStorage.getItem("favorites"))||[];
+            let ratings=JSON.parse(localStorage.getItem("ratings"))||{};
+            function renderServices(list=services){
+                const container=document.getElementById("services");
+                container.innerHTML="";
+                list.forEach((s,index)=>{
+                    const isFav=favorites.includes(index);
+                    const rating=ratings[index]||0;
+                    const div=document.createElement("div");
+                    div.className="card";
+                    let starsHTML="";
+                    for(let i=1;i<=5;i++){
+                        starsHTML+=`<span class="star ${i<=rating?'active':''}" onclick="rate(${index},${i})">★</span>`;
+                    }
+                    
+                    div.innerHTML=`
+                    ${s.top?'<span class="badge">Top Rated</span>':''}
+                    <h3>${s.name}</h3>
+                    <p>${s.desc}</p>
+                    <div class="stars">${starsHTML}</div>
+                    <p>$${s.price}</p>
+                    <p>Category: ${s.cat}</p>
+                    <button onclick="hireService('${s.name}')">Hire</button>
+                    <button class="${isFav?'favorite':''}" onclick="toggleFav(${index})">❤</button>`;
+                    container.appendChild(div);
+                    
+                });
+            }
+            function rate(index,value){
+                ratings[index]=value;
+                localStorage.setItem("ratings",JSON.stringify(ratings));
+                renderServices();
+                
+                // Theme toggle
+                const toggleBtn = document.getElementById("themeToggle");
+                if(localStorage.getItem("theme") === "light"){
+                    document.body.classList.add("light-mode");
+                    toggleBtn.textContent = "☀️";
+                }
+            toggleBtn.onclick = () => {
+                document.body.classList.toggle("light-mode");
+                if(document.body.classList.contains("light-mode")){
+                    localStorage.setItem("theme","light");
+                    toggleBtn.textContent = "☀️";
+                    
+                } else {
+                    localStorage.setItem("theme","dark");
+                    toggleBtn.textContent = "🌙";
+                }
+            };
+            }
+            function hireService(name){
+                document.getElementById("modalText").textContent=name+" booked successfully!";
+                document.getElementById("modal").style.display="flex";
+            }
+            function closeModal(){
+                document.getElementById("modal").style.display="none";
+            }
+            function toggleFav(index){
+                if(favorites.includes(index)){
+                    favorites=favorites.filter(i=>i!==index);
+                }else{
+                    favorites.push(index);
+                }
+                localStorage.setItem("favorites",JSON.stringify(favorites));
+                renderServices();
+            }
+            function filterServices(){
+                const search=document.getElementById("search").value.toLowerCase();
+                const category=document.getElementById("category").value;
+                const filtered=services.filter(s=>{
+                    return s.name.toLowerCase().includes(search) && (category==='all'||s.cat===category);
+                });
+                renderServices(filtered);
+            }
+            
+            renderServices();
+        </script>
+    </body>
+</html>
